@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -76,7 +77,8 @@ func (c *Client) call(ctx context.Context, method, pathStr string, req, res inte
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return errors.Errorf("status code: %d, body: %s", response.StatusCode, response.Body)
+		rawbody, _ := ioutil.ReadAll(response.Body)
+		return errors.Errorf("status code: %d, body: %s", response.StatusCode, rawbody)
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -116,7 +118,7 @@ func (c *Client) GetWorkspaces(ctx context.Context) ([]Workspace, error) {
 	m := "GET"
 	var res []Workspace
 	if err := c.call(ctx, m, pt, nil, &res); err != nil {
-		return nil, errors.Wrapf(err, "failed call [%s] %s/%s", m, c.config.Host, pt)
+		return nil, errors.Wrapf(err, "failed call [%s] %s%s", m, c.config.Host, pt)
 	}
 	return res, nil
 }
@@ -127,7 +129,7 @@ func (c *Client) GetWorkspaceByID(ctx context.Context, wid int) (*Workspace, err
 	m := "GET"
 	var res Workspace
 	if err := c.call(ctx, m, pt, nil, &res); err != nil {
-		return nil, errors.Wrapf(err, "failed call [%s] %s/%s", m, c.config.Host, pt)
+		return nil, errors.Wrapf(err, "failed call [%s] %s%s", m, c.config.Host, pt)
 	}
 	return &res, nil
 }
@@ -154,7 +156,7 @@ func (c *Client) GetDashboardByWorkspaceID(ctx context.Context, wid int) (*Dashb
 	m := "GET"
 	var res Dashboard
 	if err := c.call(ctx, m, pt, nil, &res); err != nil {
-		return nil, errors.Wrapf(err, "failed call [%s] %s/%s", m, c.config.Host, pt)
+		return nil, errors.Wrapf(err, "failed call [%s] %s%s", m, c.config.Host, pt)
 	}
 	return &res, nil
 }
@@ -189,4 +191,28 @@ type DetailedReport struct {
 		Cur         string      `json:"cur"`
 		Tags        []string    `json:"tags"`
 	} `json:"data"`
+}
+
+// DetailedReportRequest detailed report request
+type DetailedReportRequest struct {
+	WorkspaceID int
+	Since       time.Time
+	Until       time.Time
+	UserAgent   string
+}
+
+// GetDetailedReport gets dashboard
+func (c *Client) GetDetailedReport(ctx context.Context, req *DetailedReportRequest) (*DetailedReport, error) {
+	val := url.Values{}
+	val.Add("workspace_id", fmt.Sprintf("%d", req.WorkspaceID))
+	val.Add("since", req.Since.Format("2006-01-02"))
+	val.Add("until", req.Until.Format("2006-01-02"))
+	val.Add("user_agent", req.UserAgent)
+	pt := "/reports/api/v2/details/?" + val.Encode()
+	m := "GET"
+	var res DetailedReport
+	if err := c.call(ctx, m, pt, nil, &res); err != nil {
+		return nil, errors.Wrapf(err, "failed call [%s] %s%s", m, c.config.Host, pt)
+	}
+	return &res, nil
 }

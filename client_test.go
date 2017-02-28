@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestClient(t *testing.T) {
@@ -75,6 +76,27 @@ func TestGetDashboardByWorkspaceID(t *testing.T) {
 
 	client, ctx := TestNewClient(t, s.URL)
 	res, err := client.GetDashboardByWorkspaceID(ctx, 1111111)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%+v", res)
+}
+
+func TestGetDetailedReport(t *testing.T) {
+	s := httptest.NewServer(TestCreateResponseHandler(TestJSONFileResponse{
+		StatusCode: http.StatusOK,
+		JSONPath:   "/testdata/response_detailed_report.json",
+	}, t))
+
+	client, ctx := TestNewClient(t, s.URL)
+	n := time.Now()
+	req := &DetailedReportRequest{
+		WorkspaceID: 11111,
+		Since:       n.AddDate(0, 0, -3),
+		Until:       n,
+		UserAgent:   "go-toggl",
+	}
+	res, err := client.GetDetailedReport(ctx, req)
 	if err != nil {
 		t.Fatal(err)
 	}
