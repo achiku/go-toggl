@@ -1,2 +1,3 @@
-# toggle
-Toggle API Client
+# toggl
+
+Go toggl API Client

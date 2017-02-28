@@ -1,0 +1,18 @@
+{
+  "id": 1111111,
+  "name": "Akira Chiku's workspace",
+  "profile": 0,
+  "premium": false,
+  "admin": true,
+  "default_hourly_rate": 0,
+  "default_currency": "USD",
+  "only_admins_may_create_projects": false,
+  "only_admins_see_billable_rates": false,
+  "only_admins_see_team_dashboard": false,
+  "projects_billable_by_default": true,
+  "rounding": 1,
+  "rounding_minutes": 0,
+  "api_token": "xxxxxxxxxxxxxxxxx",
+  "at": "2014-05-22T12:57:51+00:00",
+  "ical_enabled": true
+}

@@ -1,0 +1,27 @@
+{
+  "most_active_user": [
+    {
+      "user_id": 122,
+      "duration": 171500
+    }
+  ],
+  "activity": [
+    {
+      "user_id": 122,
+      "project_id": 32557347,
+      "duration": -1488262635,
+      "description": "toggl開発",
+      "stop": null,
+      "tid": null
+    },
+    {
+      "user_id": 122,
+      "project_id": 32557347,
+      "duration": 3281,
+      "description": "Issue対応",
+      "stop": "2017-02-28T06:17:10+00:00",
+      "tid": null
+    }
+  ]
+}
+
