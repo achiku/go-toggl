@@ -28,6 +28,13 @@ type Config struct {
 	Logger     *log.Logger
 }
 
+type httpMethod string
+
+const (
+	httpMethodGET  httpMethod = "GET"
+	httpMethodPOST            = "POST"
+)
+
 // NewClient creates toggl client
 func NewClient(cfg *Config) (*Client, error) {
 	if cfg.APIKey == "" {
@@ -52,7 +59,7 @@ func NewClient(cfg *Config) (*Client, error) {
 	return &Client{config: cfg}, nil
 }
 
-func (c *Client) call(ctx context.Context, method, pathStr string, req, res interface{}) error {
+func (c *Client) call(ctx context.Context, method httpMethod, pathStr string, req, res interface{}) error {
 	payload, err := json.Marshal(req)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal request")
@@ -62,7 +69,7 @@ func (c *Client) call(ctx context.Context, method, pathStr string, req, res inte
 	}
 
 	endpoint := fmt.Sprintf("%s%s", c.config.Host, pathStr)
-	request, err := http.NewRequest(method, endpoint, strings.NewReader(string(payload)))
+	request, err := http.NewRequest(string(method), endpoint, strings.NewReader(string(payload)))
 	if err != nil {
 		return errors.Wrap(err, "failed to create request")
 	}
@@ -77,7 +84,10 @@ func (c *Client) call(ctx context.Context, method, pathStr string, req, res inte
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		rawbody, _ := ioutil.ReadAll(response.Body)
+		rawbody, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return errors.Wrap(err, "failed to read response.Body")
+		}
 		return errors.Errorf("status code: %d, body: %s", response.StatusCode, rawbody)
 	}
 
@@ -115,10 +125,9 @@ type Workspace struct {
 // GetWorkspaces gets workspaces
 func (c *Client) GetWorkspaces(ctx context.Context) ([]Workspace, error) {
 	pt := "/api/v8/workspaces"
-	m := "GET"
 	var res []Workspace
-	if err := c.call(ctx, m, pt, nil, &res); err != nil {
-		return nil, errors.Wrapf(err, "failed call [%s] %s%s", m, c.config.Host, pt)
+	if err := c.call(ctx, httpMethodGET, pt, nil, &res); err != nil {
+		return nil, errors.Wrapf(err, "failed call [%s] %s%s", httpMethodGET, c.config.Host, pt)
 	}
 	return res, nil
 }
@@ -126,10 +135,9 @@ func (c *Client) GetWorkspaces(ctx context.Context) ([]Workspace, error) {
 // GetWorkspaceByID gets workspaces
 func (c *Client) GetWorkspaceByID(ctx context.Context, wid int) (*Workspace, error) {
 	pt := fmt.Sprintf("/api/v8/workspaces/%d", wid)
-	m := "GET"
 	var res Workspace
-	if err := c.call(ctx, m, pt, nil, &res); err != nil {
-		return nil, errors.Wrapf(err, "failed call [%s] %s%s", m, c.config.Host, pt)
+	if err := c.call(ctx, httpMethodGET, pt, nil, &res); err != nil {
+		return nil, errors.Wrapf(err, "failed call [%s] %s%s", httpMethodGET, c.config.Host, pt)
 	}
 	return &res, nil
 }
@@ -153,10 +161,9 @@ type Dashboard struct {
 // GetDashboardByWorkspaceID gets dashboard
 func (c *Client) GetDashboardByWorkspaceID(ctx context.Context, wid int) (*Dashboard, error) {
 	pt := fmt.Sprintf("/api/v8/dashboard/%d", wid)
-	m := "GET"
 	var res Dashboard
-	if err := c.call(ctx, m, pt, nil, &res); err != nil {
-		return nil, errors.Wrapf(err, "failed call [%s] %s%s", m, c.config.Host, pt)
+	if err := c.call(ctx, httpMethodGET, pt, nil, &res); err != nil {
+		return nil, errors.Wrapf(err, "failed call [%s] %s%s", httpMethodGET, c.config.Host, pt)
 	}
 	return &res, nil
 }
@@ -207,12 +214,15 @@ func (c *Client) GetDetailedReport(ctx context.Context, req *DetailedReportReque
 	val.Add("workspace_id", fmt.Sprintf("%d", req.WorkspaceID))
 	val.Add("since", req.Since.Format("2006-01-02"))
 	val.Add("until", req.Until.Format("2006-01-02"))
-	val.Add("user_agent", req.UserAgent)
+	if req.UserAgent != "" {
+		val.Add("user_agent", req.UserAgent)
+	} else {
+		val.Add("user_agent", "go-toggl")
+	}
 	pt := "/reports/api/v2/details/?" + val.Encode()
-	m := "GET"
 	var res DetailedReport
-	if err := c.call(ctx, m, pt, nil, &res); err != nil {
-		return nil, errors.Wrapf(err, "failed call [%s] %s%s", m, c.config.Host, pt)
+	if err := c.call(ctx, httpMethodGET, pt, nil, &res); err != nil {
+		return nil, errors.Wrapf(err, "failed call [%s] %s%s", httpMethodGET, c.config.Host, pt)
 	}
 	return &res, nil
 }
