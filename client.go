@@ -226,3 +226,30 @@ func (c *Client) GetDetailedReport(ctx context.Context, req *DetailedReportReque
 	}
 	return &res, nil
 }
+
+// Project project
+type Project struct {
+	ID            int       `json:"id"`
+	Wid           int       `json:"wid"`
+	Name          string    `json:"name"`
+	Billable      bool      `json:"billable"`
+	IsPrivate     bool      `json:"is_private"`
+	Active        bool      `json:"active"`
+	Template      bool      `json:"template"`
+	At            time.Time `json:"at"`
+	CreatedAt     time.Time `json:"created_at"`
+	Color         string    `json:"color"`
+	AutoEstimates bool      `json:"auto_estimates"`
+	HexColor      string    `json:"hex_color"`
+	ActualHours   int       `json:"actual_hours,omitempty"`
+}
+
+// GetProjectsByWorkspaceID get projects by workspace id
+func (c *Client) GetProjectsByWorkspaceID(ctx context.Context, wid int) ([]Project, error) {
+	pt := fmt.Sprintf("/api/v8/workspaces/%d/projects", wid)
+	var res []Project
+	if err := c.call(ctx, httpMethodGET, pt, nil, &res); err != nil {
+		return nil, errors.Wrapf(err, "failed call [%s] %s%s", httpMethodGET, c.config.Host, pt)
+	}
+	return res, nil
+}

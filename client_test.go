@@ -102,3 +102,17 @@ func TestGetDetailedReport(t *testing.T) {
 	}
 	t.Logf("%+v", res)
 }
+
+func TestGetProjectByWorkspaceID(t *testing.T) {
+	s := httptest.NewServer(TestCreateResponseHandler(TestJSONFileResponse{
+		StatusCode: http.StatusOK,
+		JSONPath:   "/testdata/response_projects.json",
+	}, t))
+
+	client, ctx := TestNewClient(t, s.URL)
+	res, err := client.GetProjectsByWorkspaceID(ctx, 11111)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%+v", res)
+}
